@@ -21,10 +21,10 @@ static FAutoConsoleCommand IntegrateLightRegions(TEXT("DungeonLights.IntegrateRe
 	UBlueprint* BP=LoadObject<UBlueprint>(nullptr,TEXT("/Game/AutoCreateMap/AutoMapData/Blueprint/BP_Dugeon_Generator.BP_Dugeon_Generator"));
 	check(BP);
 	UEdGraph* G=nullptr;
-	for(auto* Graph:BP->FunctionGraphs) if(Graph->GetName()==TEXT("Generate_Corridor_Lights")) G=Graph;
+	for(UEdGraph* Graph:BP->FunctionGraphs) if(Graph->GetName()==TEXT("Generate_Corridor_Lights")) G=Graph;
 	check(G);
 	UK2Node_CallFunction* Old=nullptr; UK2Node_VariableGet* Size=nullptr; UEdGraphNode* Loop=nullptr; UK2Node_CallFunction* Location=nullptr;
-	for(auto* N:G->Nodes)
+	for(UEdGraphNode* N:G->Nodes)
 	{
 		if(auto* F=Cast<UK2Node_CallFunction>(N))
 		{
@@ -63,7 +63,7 @@ static FAutoConsoleCommand IntegrateLightRegions(TEXT("DungeonLights.IntegrateRe
 	Link(Radius->FindPinChecked(TEXT("then")),Location->FindPinChecked(TEXT("execute")));
 	// Keep the old room function for reference, but remove its independent spawn pass.
 	UK2Node_CallFunction *Room=nullptr,*Corridor=nullptr,*Routes=nullptr;
-	for(auto* Graph:BP->UbergraphPages) for(auto* N:Graph->Nodes) if(auto* F=Cast<UK2Node_CallFunction>(N))
+	for(UEdGraph* Graph:BP->UbergraphPages) for(UEdGraphNode* N:Graph->Nodes) if(auto* F=Cast<UK2Node_CallFunction>(N))
 	{
 		const FName Name=F->FunctionReference.GetMemberName();
 		if(Name==TEXT("Generate_Room_Lights")) Room=F;
