@@ -1,4 +1,4 @@
-#include "DungeonLightRegions.h"
+﻿#include "DungeonLightRegions.h"
 #include "DungeonLightPlacementLibrary.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
@@ -162,6 +162,34 @@ TArray<FVector> UDungeonLightPlacementLibrary::PlanRegionLightPositions(
 		if (Occupied.Contains(Id)) continue;
 		if (Result.Num()>=Limit) { bLimitReached=true; break; }
 		const FRegion& Region=Regions[Id];
+
+		// この領域の横幅と奥行をグリッド単位で調べる
+		const FIntPoint FirstKey = Cells[Region.Cells[0]].Key;
+
+		int32 MinX = FirstKey.X;
+		int32 MaxX = FirstKey.X;
+		int32 MinY = FirstKey.Y;
+		int32 MaxY = FirstKey.Y;
+
+		for (int32 CellIndex : Region.Cells)
+		{
+			const FIntPoint Key = Cells[CellIndex].Key;
+
+			MinX = FMath::Min(MinX, Key.X);
+			MaxX = FMath::Max(MaxX, Key.X);
+			MinY = FMath::Min(MinY, Key.Y);
+			MaxY = FMath::Max(MaxY, Key.Y);
+		}
+
+		const int32 WidthCells	= MaxX - MinX + 1;
+		const int32 HeightCells = MaxY - MinY + 1;
+
+		// 横も奥行も1マス以下なら、ライトを作らない
+		if (WidthCells <= 1 && HeightCells <= 1)
+		{
+			continue;
+		}
+
 		const FVector P=Cells[Region.Representative].Position;
 		double RadiusSquared=0;
 		for (int32 I:Region.Cells) RadiusSquared=FMath::Max(RadiusSquared,FVector::DistSquared2D(P,Cells[I].Position));
