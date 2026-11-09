@@ -77,15 +77,7 @@ void UDungeonWallLayoutLibrary::RefineDungeonWallLayout(AActor* Generator,const 
  for(auto It=R->Walls.CreateIterator();It;++It)
  {if(!It.Value().IsValid()){It.RemoveCurrent();continue;}Walls.Add(It.Key());if(!Mesh)Mesh=It.Value()->GetStaticMeshComponent()->GetStaticMesh();}
  if(!Mesh)return;
- // Remove only one-cell interior fragments. Exterior boundaries are never removed.
- TArray<FIntVector> Remove;
- for(const auto& E:Walls)
- {
-  const FIntPoint A(E.X,E.Y),B=A+(E.Z==0?FIntPoint(1,0):FIntPoint(0,1));
-  const auto Along=E.Z==0?FIntVector(0,1,0):FIntVector(1,0,0);
-  if(Floors.Contains(A)&&Floors.Contains(B)&&!Walls.Contains(E-Along)&&!Walls.Contains(E+Along))Remove.Add(E);
- }
- for(auto E:Remove)if(auto* W=R->Walls.Find(E);W&&W->IsValid()&&W->Get()->Destroy()){R->Walls.Remove(E);Walls.Remove(E);++Removed;}
+ // Keep short walls for the attachment/L-shape pass rather than deleting them.
  FCollisionQueryParams Query(SCENE_QUERY_STAT(DungeonWallWalkability),false,Generator);
  FCollisionObjectQueryParams Objects;Objects.AddObjectTypesToQuery(ECC_WorldStatic);Objects.AddObjectTypesToQuery(ECC_WorldDynamic);
  // A conservative capsule checks furniture as well as wall collision, at walking height.
@@ -118,18 +110,49 @@ void UDungeonWallLayoutLibrary::RefineDungeonWallLayout(AActor* Generator,const 
   bool OK=true;for(const auto& Box:Obstacles)if(Box.Intersect(FBox(O-Ext,O+Ext))){OK=false;break;}
   Allowed.Add(E,OK);return OK;
  };
+ const int32 OuterBefore=DungeonWallTopology::OuterDeadEnds(Floors,Blocked).Num();
+ int32 LoopOpenings=0,Reshaped=0;
+ auto CanOpen=[&](const FIntVector& E)
+ {
+  auto* Entry=R->Walls.Find(E);if(!Entry||!Entry->IsValid())return false;
+  auto OpeningQuery=Query;OpeningQuery.AddIgnoredActor(Entry->Get());
+  const FIntPoint A(E.X,E.Y),B=A+Steps[E.Z];
+  return !World->SweepTestByObjectType(FVector(A.X*S,A.Y*S,110),FVector(B.X*S,B.Y*S,110),FQuat::Identity,Objects,Shape,OpeningQuery);
+ };
+ for(int32 I=0;I<32;++I)
+ {
+  FIntVector Opening;
+  if(!DungeonWallTopology::FindOuterLoop(Floors,Blocked,Walls,CanOpen,Opening))break;
+  auto* Entry=R->Walls.Find(Opening);
+  if(!Entry||!Entry->IsValid()||!Entry->Get()->Destroy())break;
+  R->Walls.Remove(Opening);Walls.Remove(Opening);Blocked.Remove(Opening);++Removed;++LoopOpenings;
+ }
+ auto AddPlan=[&](const TArray<FIntVector>& Edges)
+ {
+  TArray<FIntVector> Created;
+  for(auto E:Edges)
+  {
+   if(!SpawnAlignedDungeonWall(Generator,FIntPoint(E.X,E.Y),E.Z==0?1:2,S,Mesh))
+   {
+    for(auto C:Created){if(auto* Entry=R->Walls.Find(C);Entry&&Entry->IsValid())Entry->Get()->Destroy();R->Walls.Remove(C);}
+    return false;
+   }
+   Created.Add(E);
+  }
+  for(auto E:Created){Walls.Add(E);Blocked.Add(E);}return true;
+ };
+ for(int32 I=0;I<24;++I)
+ {
+  auto Plan=DungeonWallTopology::FindFloatingWallExtension(Floors,Blocked,Walls,CanPlace);
+  if(Plan.Edges.IsEmpty()||!AddPlan(Plan.Edges))break;
+  ++Reshaped;
+ }
  for(int32 I=0;I<MaxBaffles;++I)
  {
   auto Plan=DungeonWallTopology::FindBaffle(Floors,Blocked,Walls,Limit,CanPlace);if(Plan.Edges.IsEmpty())break;
-  TArray<FIntVector> Created;bool OK=true;
-  for(auto E:Plan.Edges)
-  {
-   if(!SpawnAlignedDungeonWall(Generator,FIntPoint(E.X,E.Y),E.Z==0?1:2,S,Mesh)){OK=false;break;}
-   Created.Add(E);
-  }
-  if(!OK){for(auto E:Created){if(auto* W=R->Walls.Find(E);W&&W->IsValid())W->Get()->Destroy();R->Walls.Remove(E);}break;}
-  for(auto E:Created){Walls.Add(E);Blocked.Add(E);}++Added;
+  if(!AddPlan(Plan.Edges))break;++Added;
  }
  R->bRefined=true;
  UE_LOG(LogTemp,Display,TEXT("WALL_POLISH floors=%d removedStubs=%d baffles=%d sightScore=%lld->%lld components=%d->%d"),Floors.Num(),Removed,Added,BeforeScore,DungeonWallTopology::SightScore(Floors,Blocked,Limit),BaseComponents,DungeonWallTopology::Components(Floors,Blocked));
+ UE_LOG(LogTemp,Display,TEXT("WALL_CONNECTIONS outerDeadEnds=%d->%d loopOpenings=%d reshaped=%d"),OuterBefore,DungeonWallTopology::OuterDeadEnds(Floors,Blocked).Num(),LoopOpenings,Reshaped);
 }

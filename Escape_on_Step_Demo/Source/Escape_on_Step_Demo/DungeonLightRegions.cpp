@@ -194,7 +194,10 @@ TArray<FVector> UDungeonLightPlacementLibrary::PlanRegionLightPositions(
 		double RadiusSquared=0;
 		for (int32 I:Region.Cells) RadiusSquared=FMath::Max(RadiusSquared,FVector::DistSquared2D(P,Cells[I].Position));
 		Result.Add(P);
-		AttenuationRadii.Add(FMath::Clamp(FMath::Sqrt(RadiusSquared)+GridSize,1000.0,20000.0));
+		// Broaden the cutoff without increasing the light's intensity or source size.
+		// Keep the existing upper bound to limit overlapping dynamic-light coverage.
+		const double BaseRadius=FMath::Clamp(FMath::Sqrt(RadiusSquared)+GridSize,1000.0,20000.0);
+		AttenuationRadii.Add(FMath::Min(BaseRadius*1.5,20000.0));
 	}
 	UE_LOG(LogTemp,Display,TEXT("LIGHT_REGIONS: candidates=%d clear=%d blockedEdges=%d regions=%d newLights=%d limited=%d"),
 		CandidateWorldPositions.Num(),Cells.Num(),BlockedEdges,Regions.Num(),Result.Num(),bLimitReached);
