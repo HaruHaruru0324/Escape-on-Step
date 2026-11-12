@@ -108,6 +108,12 @@ static bool FindLargeRoomGoalLocation(AActor* G,UStaticMesh* Table,
  DungeonLightRegions::Partition(Cells,Labels,Regions);
  const auto Centres=DungeonGoalRegions::CentralCandidates(Cells,Labels,Regions,S);
  TArray<FCandidate> Candidates;TSet<int32> SelectedRegions;
+ if(G->ActorHasTag(TEXT("AdjacentRoomsGenerated")))
+ {
+  // The start room is often the largest in this layout. Keep the goal in another region.
+  const FIntPoint StartCell(FMath::RoundToInt(PlayerP.X/S),FMath::RoundToInt(PlayerP.Y/S));
+  if(const int32* StartIndex=Lookup.Find(StartCell))SelectedRegions.Add(Labels[*StartIndex]);
+ }
  for(const auto& Centre:Centres)
  {
   if(SelectedRegions.Contains(Centre.Region))continue;
