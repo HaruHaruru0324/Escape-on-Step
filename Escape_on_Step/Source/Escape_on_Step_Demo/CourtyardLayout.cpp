@@ -2,7 +2,7 @@
 
 namespace
 {
-const FIntPoint Steps[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+const FIntPoint CourtyardLayoutSteps[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 bool Fail(FString& Error, const TCHAR* Message)
 {
 	Error = Message;
@@ -366,7 +366,7 @@ bool UCourtyardLayoutLibrary::BuildCourtyardPlan(const FCourtyardSettings& Input
 				{
 					continue;
 				}
-				const auto Step = Steps[Direction];
+				const auto Step = CourtyardLayoutSteps[Direction];
 				const int32 Gap = Direction == 0 ? TileX[Other % Columns] - TileX[Id % Columns] - Extent
 												 : TileY[Other / Columns] - TileY[Id / Columns] - Extent;
 				TArray<FCandidate> Choices;
@@ -526,8 +526,8 @@ bool UCourtyardLayoutLibrary::BuildCourtyardPlan(const FCourtyardSettings& Input
 			const auto Covers = [&](int32 Index)
 			{
 				const auto& C = Candidates[Index];
-				const FIntPoint P = C.A == N.Id	  ? C.Cells[0] - Steps[C.Direction]
-									: C.B == N.Id ? C.Cells.Last() + Steps[C.Direction]
+				const FIntPoint P = C.A == N.Id	  ? C.Cells[0] - CourtyardLayoutSteps[C.Direction]
+									: C.B == N.Id ? C.Cells.Last() + CourtyardLayoutSteps[C.Direction]
 												  : FIntPoint(MAX_int32, MAX_int32);
 				if (!InRect(P, R))
 				{
@@ -573,11 +573,11 @@ bool UCourtyardLayoutLibrary::BuildCourtyardPlan(const FCourtyardSettings& Input
 		{
 			if (L.From == N.Id)
 			{
-				Ports.Add(L.Cells[0] - Steps[L.Direction]);
+				Ports.Add(L.Cells[0] - CourtyardLayoutSteps[L.Direction]);
 			}
 			if (L.To == N.Id)
 			{
-				Ports.Add(L.Cells.Last() + Steps[L.Direction]);
+				Ports.Add(L.Cells.Last() + CourtyardLayoutSteps[L.Direction]);
 			}
 		}
 		FixBlindEnds(N, Ports, true);
@@ -688,7 +688,7 @@ bool UCourtyardLayoutLibrary::BuildCourtyardPlan(const FCourtyardSettings& Input
 							{
 								for (int32 Y = 0; Y < Size.Y; ++Y)
 								{
-									const auto P = Area.Min + FIntPoint(X, Y), Q = P + Steps[D];
+									const auto P = Area.Min + FIntPoint(X, Y), Q = P + CourtyardLayoutSteps[D];
 									if (!InRect(Q, Bounds) && Cells.Contains(Q))
 									{
 										Doors.Add(P);
@@ -739,7 +739,7 @@ bool UCourtyardLayoutLibrary::BuildCourtyardPlan(const FCourtyardSettings& Input
 	int32 Best = 0;
 	for (int32 I = 0; I < Queue.Num(); ++I)
 	{
-		for (const auto D : Steps)
+		for (const auto D : CourtyardLayoutSteps)
 		{
 			const auto Next = Queue[I] + D;
 			const auto* C = Cells.Find(Next);
@@ -810,7 +810,7 @@ bool UCourtyardLayoutLibrary::ValidateCourtyardPlan(const FCourtyardPlan& Plan, 
 		{
 			const int32 D = R.DoorDirections[I];
 			const auto P = R.DoorCells[I];
-			if (D < 0 || D > 3 || !InRect(P, Bounds) || InRect(P + Steps[D], Bounds) || !Cells.Contains(P + Steps[D]))
+			if (D < 0 || D > 3 || !InRect(P, Bounds) || InRect(P + CourtyardLayoutSteps[D], Bounds) || !Cells.Contains(P + CourtyardLayoutSteps[D]))
 			{
 				return Fail(Error, TEXT("Room door must open onto another path"));
 			}
@@ -826,7 +826,7 @@ bool UCourtyardLayoutLibrary::ValidateCourtyardPlan(const FCourtyardPlan& Plan, 
 		{
 			return Fail(Error, TEXT("Invalid straight tunnel"));
 		}
-		const auto Step = Steps[L.Direction], A = L.Cells[0] - Step, B = L.Cells.Last() + Step;
+		const auto Step = CourtyardLayoutSteps[L.Direction], A = L.Cells[0] - Step, B = L.Cells.Last() + Step;
 		if (!Contains(Plan.Nodes[L.From], A) || !Contains(Plan.Nodes[L.To], B))
 		{
 			return Fail(Error, TEXT("Tunnel endpoint misses the end of a space"));
@@ -929,7 +929,7 @@ bool UCourtyardLayoutLibrary::ValidateCourtyardPlan(const FCourtyardPlan& Plan, 
 		{
 			return Fail(Error, TEXT("Orphan space floor"));
 		}
-		for (auto D : Steps)
+		for (auto D : CourtyardLayoutSteps)
 		{
 			const auto* Other = Cells.FindRef(C.Position + D);
 			if (Other && Other->Kind != ECourtyardCellKind::Tunnel && Other->NodeId != C.NodeId)
@@ -942,7 +942,7 @@ bool UCourtyardLayoutLibrary::ValidateCourtyardPlan(const FCourtyardPlan& Plan, 
 	TArray<FIntPoint> Queue{Plan.StartCell};
 	for (int32 I = 0; I < Queue.Num(); ++I)
 	{
-		for (auto D : Steps)
+		for (auto D : CourtyardLayoutSteps)
 		{
 			const auto Next = Queue[I] + D;
 			if (Cells.Contains(Next) && !Seen.Contains(Next))
@@ -967,3 +967,4 @@ bool UCourtyardLayoutLibrary::ValidateCourtyardPlan(const FCourtyardPlan& Plan, 
 	}
 	return true;
 }
+

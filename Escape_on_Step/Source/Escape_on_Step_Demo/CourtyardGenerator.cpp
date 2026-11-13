@@ -13,7 +13,7 @@
 
 namespace
 {
-const FIntPoint Steps[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+const FIntPoint CourtyardRenderSteps[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 }
 
 ACourtyardGenerator::ACourtyardGenerator()
@@ -153,8 +153,8 @@ void ACourtyardGenerator::PlanModules()
 	auto Boundary = [&](FIntPoint Cell, int32 Direction, TSoftObjectPtr<UWorld> Level)
 	{
 		const float Yaw = Direction * 90.f;
-		const FVector Center(Cell.X * CellSize + Steps[Direction].X * CellSize * .5f,
-							 Cell.Y * CellSize + Steps[Direction].Y * CellSize * .5f, 0);
+		const FVector Center(Cell.X * CellSize + CourtyardRenderSteps[Direction].X * CellSize * .5f,
+							 Cell.Y * CellSize + CourtyardRenderSteps[Direction].Y * CellSize * .5f, 0);
 		AddModule(Level, Center - FRotator(0, Yaw, 0).RotateVector(FVector(0, -CellSize * .5f, 0)), Yaw);
 	};
 	for (const auto& C : Plan.Cells)
@@ -164,9 +164,9 @@ void ACourtyardGenerator::PlanModules()
 			const auto& Link = Plan.Links[C.LinkId];
 			const bool First = C.Position == Link.Cells[0], Last = C.Position == Link.Cells.Last();
 			const bool RoadStart =
-				Cells.FindChecked(Link.Cells[0] - Steps[Link.Direction])->Kind == ECourtyardCellKind::Street;
+				Cells.FindChecked(Link.Cells[0] - CourtyardRenderSteps[Link.Direction])->Kind == ECourtyardCellKind::Street;
 			const bool RoadEnd =
-				Cells.FindChecked(Link.Cells.Last() + Steps[Link.Direction])->Kind == ECourtyardCellKind::Street;
+				Cells.FindChecked(Link.Cells.Last() + CourtyardRenderSteps[Link.Direction])->Kind == ECourtyardCellKind::Street;
 			const int32 Direction = Link.Direction;
 			const float Yaw = Direction * 90.f;
 			const FVector Center(C.Position.X * CellSize, C.Position.Y * CellSize, 0);
@@ -175,12 +175,12 @@ void ACourtyardGenerator::PlanModules()
 					  !First || RoadStart, Last && RoadEnd);
 			if (First && RoadStart)
 			{
-				Boundary(C.Position - Steps[Direction], Direction,
+				Boundary(C.Position - CourtyardRenderSteps[Direction], Direction,
 						 Theme->Portals[Random.RandRange(0, Theme->Portals.Num() - 1)]);
 			}
 			if (Last && RoadEnd)
 			{
-				Boundary(C.Position + Steps[Direction], (Direction + 2) % 4,
+				Boundary(C.Position + CourtyardRenderSteps[Direction], (Direction + 2) % 4,
 						 Theme->Portals[Random.RandRange(0, Theme->Portals.Num() - 1)]);
 			}
 		}
@@ -188,7 +188,7 @@ void ACourtyardGenerator::PlanModules()
 		{
 			for (int32 D = 0; D < 4; ++D)
 			{
-				if (Cells.Contains(C.Position + Steps[D]))
+				if (Cells.Contains(C.Position + CourtyardRenderSteps[D]))
 				{
 					continue;
 				}
@@ -226,7 +226,7 @@ void ACourtyardGenerator::PlanModules()
 			{
 				for (int32 D = 0; D < 4; ++D)
 				{
-					const auto P = R.Min + FIntPoint(X, Y), Q = P + Steps[D];
+					const auto P = R.Min + FIntPoint(X, Y), Q = P + CourtyardRenderSteps[D];
 					if (Q.X >= R.Min.X && Q.Y >= R.Min.Y && Q.X < R.Min.X + R.Size.X && Q.Y < R.Min.Y + R.Size.Y)
 					{
 						continue;
@@ -236,9 +236,9 @@ void ACourtyardGenerator::PlanModules()
 					{
 						Door |= Room.DoorCells[I] == P && Room.DoorDirections[I] == D;
 					}
-					const FVector Center(P.X * CellSize + Steps[D].X * CellSize * .5f,
-										 P.Y * CellSize + Steps[D].Y * CellSize * .5f, 0);
-					const FVector Tangent(-Steps[D].Y, Steps[D].X, 0);
+					const FVector Center(P.X * CellSize + CourtyardRenderSteps[D].X * CellSize * .5f,
+										 P.Y * CellSize + CourtyardRenderSteps[D].Y * CellSize * .5f, 0);
+					const FVector Tangent(-CourtyardRenderSteps[D].Y, CourtyardRenderSteps[D].X, 0);
 					const auto Wall = [&](float Offset, float Length, float Z, float H)
 					{
 						FVector Size = D % 2 == 0 ? FVector(Thickness, Length, H) : FVector(Length, Thickness, H);
@@ -449,7 +449,7 @@ bool ACourtyardGenerator::ValidatePhysicalLayout()
 	TArray<FIntPoint> Queue{Plan.StartCell};
 	for (int32 I = 0; I < Queue.Num(); ++I)
 	{
-		for (auto D : Steps)
+		for (auto D : CourtyardRenderSteps)
 		{
 			const auto Next = Queue[I] + D;
 			if (!Floors.Contains(Next) || Seen.Contains(Next))
@@ -497,3 +497,4 @@ bool ACourtyardGenerator::ValidatePhysicalLayout()
 	}
 	return true;
 }
+

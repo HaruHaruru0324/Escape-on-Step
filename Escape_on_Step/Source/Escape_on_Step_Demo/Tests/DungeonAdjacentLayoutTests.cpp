@@ -40,12 +40,12 @@ bool FAdjacentLayoutTest::RunTest(const FString&)
 		const auto& First = L.Rooms[0];
 		Queue.Add(First.Center());
 		Visited.Add(Queue[0]);
-		const FIntPoint Steps[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+		const FIntPoint TestSteps[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 		for (int32 I = 0; I < Queue.Num(); ++I)
 		{
 			for (int32 D = 0; D < 4; ++D)
 			{
-				const auto P = Queue[I], Q = P + Steps[D];
+				const auto P = Queue[I], Q = P + TestSteps[D];
 				const auto E = D == 0	? FIntVector(P.X, P.Y, 0)
 							   : D == 1 ? FIntVector(P.X, P.Y, 1)
 							   : D == 2 ? FIntVector(P.X - 1, P.Y, 0)
@@ -68,7 +68,7 @@ bool FAdjacentLayoutTest::RunTest(const FString&)
 		for (const auto& E : L.Walls)
 		{
 			const FIntPoint P(E.X, E.Y);
-			const bool Interior = L.Cells.Contains(P) && L.Cells.Contains(P + Steps[E.Z]);
+			const bool Interior = L.Cells.Contains(P) && L.Cells.Contains(P + TestSteps[E.Z]);
 			if (Interior)
 			{
 				TestTrue(TEXT("Interior wall touches another wall"),
@@ -116,3 +116,4 @@ bool FAdjacentLayoutTest::RunTest(const FString&)
 	return true;
 }
 #endif
+
