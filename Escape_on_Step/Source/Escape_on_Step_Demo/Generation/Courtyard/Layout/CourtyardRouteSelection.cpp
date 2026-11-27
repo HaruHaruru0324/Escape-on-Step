@@ -1,9 +1,9 @@
-#include "Generation/Courtyard/Layout/CourtyardLayout.h"
+﻿#include "Generation/Courtyard/Layout/CourtyardLayout.h"
 
 namespace CourtyardRouteSelection
 {
-    // const FIntPoint Steps[]を、{{1, 0}, {0, 1}, {-1, 0}, {0, -1}}に設定する。
-    const FIntPoint Steps[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+    // const FIntPoint RouteSteps[]を、{{1, 0}, {0, 1}, {-1, 0}, {0, -1}}に設定する。
+    const FIntPoint RouteSteps[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 
     struct FEvaluation
     {
@@ -121,10 +121,10 @@ void UCourtyardLayoutLibrary::ImproveMazeConnections(const TArray<FCourtyardNode
             // この行では「Cの方向番号が0より小さい」または「Cの方向番号が3より大きい」を指定し、前後の行の計算・呼び出しへつなげる。
             C.Direction < 0 || C.Direction > 3)
             return;
-        // 維持する必要がある出口のビット情報（Required）の「Cの接続元ID」に対応する要素へ、接続口が覆う自由端をビットで求める（引数：広い空間の一覧（Nodes）の「Cの接続元ID」に対応する要素、Cのセル列の「0」に対応する要素から東・北・西・南の移動差分（Steps）の「Cの方向番号」に対応する要素を引いた値）とのビットORで該当するビットを残す。
-        Required[C.From] |= FreeEnds(Nodes[C.From], C.Cells[0] - Steps[C.Direction]);
-        // 維持する必要がある出口のビット情報（Required）の「Cの接続先ID」に対応する要素へ、接続口が覆う自由端をビットで求める（引数：広い空間の一覧（Nodes）の「Cの接続先ID」に対応する要素、Cのセル列で、末尾の要素を取得すると東・北・西・南の移動差分（Steps）の「Cの方向番号」に対応する要素の和）とのビットORで該当するビットを残す。
-        Required[C.To] |= FreeEnds(Nodes[C.To], C.Cells.Last() + Steps[C.Direction]);
+        // 維持する必要がある出口のビット情報（Required）の「Cの接続元ID」に対応する要素へ、接続口が覆う自由端をビットで求める（引数：広い空間の一覧（Nodes）の「Cの接続元ID」に対応する要素、Cのセル列の「0」に対応する要素から東・北・西・南の移動差分（RouteSteps）の「Cの方向番号」に対応する要素を引いた値）とのビットORで該当するビットを残す。
+        Required[C.From] |= FreeEnds(Nodes[C.From], C.Cells[0] - RouteSteps[C.Direction]);
+        // 維持する必要がある出口のビット情報（Required）の「Cの接続先ID」に対応する要素へ、接続口が覆う自由端をビットで求める（引数：広い空間の一覧（Nodes）の「Cの接続先ID」に対応する要素、Cのセル列で、末尾の要素を取得すると東・北・西・南の移動差分（RouteSteps）の「Cの方向番号」に対応する要素の和）とのビットORで該当するビットを残す。
+        Required[C.To] |= FreeEnds(Nodes[C.To], C.Cells.Last() + RouteSteps[C.Direction]);
     }
     // Evaluate（Evaluate）を、周囲の値を使って判定・計算する小さな関数として定義する。
     const auto Evaluate = [&](const TArray<int32>& Edges)
@@ -161,8 +161,8 @@ void UCourtyardLayoutLibrary::ImproveMazeConnections(const TArray<FCourtyardNode
             ++Result.Degrees[C.From];
             // この検査や計算の結果（Result）の部屋ごとの接続数の「Cの接続先ID」に対応する要素を1増やす。
             ++Result.Degrees[C.To];
-            // A（A）にCのセル列の「0」に対応する要素から東・北・西・南の移動差分（Steps）の「Cの方向番号」に対応する要素を引いた値を格納する。B（B）にCのセル列で、末尾の要素を取得すると東・北・西・南の移動差分（Steps）の「Cの方向番号」に対応する要素の和を格納する。
-            const auto A = C.Cells[0] - Steps[C.Direction], B = C.Cells.Last() + Steps[C.Direction];
+            // A（A）にCのセル列の「0」に対応する要素から東・北・西・南の移動差分（RouteSteps）の「Cの方向番号」に対応する要素を引いた値を格納する。B（B）にCのセル列で、末尾の要素を取得すると東・北・西・南の移動差分（RouteSteps）の「Cの方向番号」に対応する要素の和を格納する。
+            const auto A = C.Cells[0] - RouteSteps[C.Direction], B = C.Cells.Last() + RouteSteps[C.Direction];
             // 部屋の出入口（Ports）の「Cの接続元ID」に対応する要素で、要素または対応関係を末尾へ追加する（引数：A）。
             Ports[C.From].Add(A);
             // 部屋の出入口（Ports）の「Cの接続先ID」に対応する要素で、要素または対応関係を末尾へ追加する（引数：B）。
