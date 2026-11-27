@@ -24,7 +24,7 @@ public class Escape_on_Step_Demo : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 		if (Target.bBuildEditor)
 		{
-			PrivateDependencyModuleNames.AddRange(new string[] { "UnrealEd", "BlueprintGraph", "KismetCompiler" });
+			PrivateDependencyModuleNames.AddRange(new string[] { "UnrealEd", "BlueprintGraph", "KismetCompiler", "NavigationSystem", "GraphEditor", "SlateCore", "Json" });
 		}
 
 		PublicIncludePaths.AddRange(new string[] {
