@@ -1,8 +1,8 @@
-#include "Generation/Courtyard/Layout/CourtyardWallRegions.h"
+﻿#include "Generation/Courtyard/Layout/CourtyardWallRegions.h"
 
 namespace
 {
-    const FIntPoint Steps[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+    const FIntPoint WallRegionSteps[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 }
 
 FCourtyardWallRegions CourtyardWallRegions::Build(const FCourtyardPlan& Plan, const TSet<FIntPoint>& ProtectedCells)
@@ -37,7 +37,7 @@ FCourtyardWallRegions CourtyardWallRegions::Build(const FCourtyardPlan& Plan, co
 
             int32 NeighborCount = 0;
             bool NearTunnel = false;
-            for (const auto Step : Steps)
+            for (const auto Step : WallRegionSteps)
             {
                 if (const auto Neighbor = Floors.Find(P + Step))
                 {
@@ -54,7 +54,7 @@ FCourtyardWallRegions CourtyardWallRegions::Build(const FCourtyardPlan& Plan, co
             }
             for (int32 Direction = 0; Direction < 2; ++Direction)
             {
-                if (Floors.Contains(P - Steps[Direction]) && Floors.Contains(P + Steps[Direction]))
+                if (Floors.Contains(P - WallRegionSteps[Direction]) && Floors.Contains(P + WallRegionSteps[Direction]))
                 {
                     const int32 Distance = FMath::Abs(2 * Index - (Route.Cells.Num() - 1));
                     if (Distance < BestDistance)
@@ -103,7 +103,7 @@ FCourtyardWallRegions CourtyardWallRegions::Build(const FCourtyardPlan& Plan, co
             {
                 Owner = NodeId;
             }
-            for (const auto Step : Steps)
+            for (const auto Step : WallRegionSteps)
             {
                 const FIntPoint Next = P + Step;
                 const auto Neighbor = Floors.Find(Next);
@@ -136,7 +136,7 @@ FCourtyardWallRegions CourtyardWallRegions::Build(const FCourtyardPlan& Plan, co
     {
         const FIntPoint P = Queue[Head];
         const int32 Owner = NearestOwner.FindChecked(P);
-        for (const auto Step : Steps)
+        for (const auto Step : WallRegionSteps)
         {
             const FIntPoint Next = P + Step;
             if (Floors.Contains(Next) && !NearestOwner.Contains(Next))
@@ -163,7 +163,7 @@ FCourtyardWallRegions CourtyardWallRegions::Build(const FCourtyardPlan& Plan, co
     for (auto It = Result.AddedTunnels.CreateIterator(); It; ++It)
     {
         const FIntPoint P = It.Key();
-        const FIntPoint Step = Steps[It.Value().Direction];
+        const FIntPoint Step = WallRegionSteps[It.Value().Direction];
         const int32 A = RegionByCell.FindChecked(P - Step);
         const int32 B = RegionByCell.FindChecked(P + Step);
         if (A == B)

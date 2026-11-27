@@ -1,4 +1,4 @@
-#if WITH_DEV_AUTOMATION_TESTS
+﻿#if WITH_DEV_AUTOMATION_TESTS
 #include "Generation/Courtyard/Layout/CourtyardWallRegions.h"
 #include "Misc/AutomationTest.h"
 
@@ -8,7 +8,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCourtyardWallRegionsTest,
 
 bool FCourtyardWallRegionsTest::RunTest(const FString&)
 {
-    const FIntPoint Steps[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+    const FIntPoint TestSteps[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
     FCourtyardPlan Simple;
     for (int32 X = -2; X <= 3; ++X)
     {
@@ -81,7 +81,7 @@ bool FCourtyardWallRegionsTest::RunTest(const FString&)
                 continue;
             }
             TestEqual(TEXT("Region ownership is deterministic"), *Owner, Again.StyleOwnerByCell.FindChecked(Cell.Position));
-            for (const auto Step : Steps)
+            for (const auto Step : TestSteps)
             {
                 if (const auto NeighborOwner = Regions.StyleOwnerByCell.Find(Cell.Position + Step))
                 {
@@ -92,7 +92,7 @@ bool FCourtyardWallRegionsTest::RunTest(const FString&)
         for (const auto& Pair : Regions.AddedTunnels)
         {
             const auto P = Pair.Key;
-            const auto Step = Steps[Pair.Value.Direction];
+            const auto Step = TestSteps[Pair.Value.Direction];
             const FIntPoint Side(-Step.Y, Step.X);
             TestEqual(TEXT("Separator length is one cell"), Pair.Value.Cells.Num(), 1);
             TestTrue(TEXT("Never converts room floor to a tunnel"), Floors.FindChecked(P)->NodeId == INDEX_NONE);

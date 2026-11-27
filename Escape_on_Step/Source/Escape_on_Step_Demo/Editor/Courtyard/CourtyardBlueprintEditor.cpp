@@ -328,5 +328,5 @@ void Apply()
  UE_LOG(LogTemp,Display,TEXT("COURTYARD_BP %s"),*Report);
 }
 }
-static FAutoConsoleCommand ApplyCourtyardBP(TEXT("CourtyardBP.Apply"),TEXT("Create the Courtyard Blueprint algorithm graphs."),FConsoleCommandDelegate::CreateStatic(&CourtyardBPEditor::Apply));
+static FAutoConsoleCommand ApplyCourtyardOrganicBPCommand(TEXT("CourtyardBP.Apply"),TEXT("Create the Courtyard Blueprint algorithm graphs."),FConsoleCommandDelegate::CreateStatic(&CourtyardBPEditor::Apply));
 #endif
