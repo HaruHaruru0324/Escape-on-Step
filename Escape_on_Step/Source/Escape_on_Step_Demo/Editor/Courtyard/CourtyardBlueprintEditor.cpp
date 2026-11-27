@@ -1,4 +1,4 @@
-#if WITH_EDITOR
+﻿#if WITH_EDITOR
 #include "CoreMinimal.h"
 #include "HAL/IConsoleManager.h"
 #include "Engine/Blueprint.h"
